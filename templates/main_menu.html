@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Menu</title>
+</head>
+<body>
+
+    <p>Hva vil du gjøre?</p>
+
+    {% if role == 'bruker' %}
+    <ul>
+        <li><a href="/create_ticket">Opprett ny sak</a></li>
+        <li><a href="/view_tickets">Se mine saker</a></li>
+        <li><a href="/logout">Logg ut</a></li>
+    </ul>
+
+    {% elif role == 'drift' %}
+    <ul>
+        <li><a href="/manage_ticket">Ta et sak</a></li>
+        <li><a href="/view_all_tickets">Se alle saker</a></li>
+        <li><a href="/logout">Logg ut</a></li>
+    </ul>
+    {% endif %}
+
+</body>
+</html>

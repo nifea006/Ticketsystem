@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rolle valg</title>
+</head>
+
+<body>
+
+    <p>Du har flere roller. Hva vil du gjøre i dag?</p>
+
+    <form method="POST" action="/set_role">
+        {% for r in roles %}
+        <ul>
+            <button type="submit" name="role" value="{{ r }}">
+                {% if r == 'bruker' %}Bruker{% endif %}
+                {% if r == 'drift' %}Drift arbeider{% endif %}
+            </button>
+        </ul>
+        {% endfor %}
+    </form>
+
+</body>
+
+</html>
