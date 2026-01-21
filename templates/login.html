@@ -27,9 +27,8 @@
         <button type="submit">Logg inn</button>
         <p>Har du ikke konto?<a href="/register"> Registrer deg</a></p>
     </form>
-    {% endif %}
 
-    {% if request.path == '/register' %}
+    {% elif request.path == '/register' %}
     <h2>Registrer</h2>
     <form method="POST" action="/register">
         <label for="email">E-post:</label><br>

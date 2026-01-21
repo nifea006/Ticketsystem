@@ -59,7 +59,7 @@ def tickets_table():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS tickets (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
+                username VARCHAR(50) NOT NULL,
                 title VARCHAR(255) NOT NULL,
                 description TEXT NOT NULL,
                 status VARCHAR(50) NOT NULL DEFAULT 'åpen',
@@ -160,6 +160,90 @@ def main_menu():
     role = session.get('active_role')
 
     return render_template('main_menu.html', role=role)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/create_ticket', methods=['GET', 'POST'])
+def create_ticket():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    username = session['username']
+
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO tickets (username, title, description) VALUES (%s, %s, %s)", (username, title, description))
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+    return render_template('tickets/create_ticket.html')
+
+@app.route('/view_tickets')
+def view_tickets():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    username = session['username']
+
+    if session.get('active_role') == 'bruker':
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM tickets WHERE username = %s", (username,))
+        tickets = cursor.fetchall()
+        cursor.close()
+        connection.close()
+
+    elif session.get('active_role') == 'drift':
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM tickets")
+        tickets = cursor.fetchall()
+        cursor.close()
+        connection.close()
+
+    return render_template('tickets/view_tickets.html', tickets=tickets)
+
+@app.route('/manage_tickets')
+def manage_tickets():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM tickets")
+    tickets = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('tickets/manage_tickets.html', tickets=tickets)
+
+@app.route('/manage_ticket', methods=['POST'])
+def manage_ticket():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    ticket_id = request.form['ticket_id']
+    action = request.form['action']
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    if action == 'ta_sak':
+        cursor.execute("UPDATE tickets SET status = 'under behandling' WHERE id = %s", (ticket_id,))
+    elif action == 'lukk_sak':
+        cursor.execute("UPDATE tickets SET status = 'lukket' WHERE id = %s", (ticket_id,))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return redirect(url_for('manage_tickets'))
 
 if __name__ == '__main__':
     app.run(debug=True)

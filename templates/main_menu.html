@@ -20,16 +20,18 @@
     <ul>
         <li><a href="/create_ticket">Opprett ny sak</a></li>
         <li><a href="/view_tickets">Se mine saker</a></li>
-        <li><a href="/login">Logg ut</a></li>
-    </ul>
-    {% endif %}
-
-    {% if role == 'drift' %}
-    <ul>
-        <li><a href="/manage_ticket">Ta et sak</a></li>
-        <li><a href="/view_all_tickets">Se alle saker</a></li>
+        {% if 'drift' in session.roles %}
         <li><a href="/chose_role">Endre rolle</a></li>
-        <li><a href="/login">Logg ut</a></li>
+        {% endif %}
+        <li><a href="/logout">Logg ut</a></li>
+    </ul>
+
+    {% elif role == 'drift' %}
+    <ul>
+        <li><a href="/manage_tickets">Ta et sak</a></li>
+        <li><a href="/view_tickets">Se alle saker</a></li>
+        <li><a href="/chose_role">Endre rolle</a></li>
+        <li><a href="/logout">Logg ut</a></li>
     </ul>
     {% endif %}
 

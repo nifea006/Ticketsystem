@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Se sakene</title>
+</head>
+
+<body>
+    {% if session.active_role == 'bruker' %}
+    <h2>Sakene dine</h2>
+    <ul>
+        {% for ticket in tickets %}
+        <li>
+            <strong>{{ ticket.title }}</strong> - {{ ticket.description }} (Status: {{ ticket.status }})
+        </li>
+        {% endfor %}
+    </ul>
+
+    {% elif session.active_role == 'drift' %}
+    <h2>Alle sakene</h2>
+    <ul>
+        {% for ticket in tickets %}
+        <li>
+            <strong>{{ ticket.title }}</strong> - {{ ticket.description }} (Status: {{ ticket.status }})
+            {% if ticket.status == 'lukket' %}
+            <form action="/manage_ticket" method="POST" style="display: inline;">
+                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                <button type="submit" name="action" value="fjern_sak">Fjern sak</button>
+            </form>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <a href="/"><button>Back til hovedmenyen</button></a>
+</body>
+
+</html>

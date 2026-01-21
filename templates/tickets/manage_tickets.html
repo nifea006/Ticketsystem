@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrer sakene</title>
+</head>
+
+<body>
+
+    <h2>Administrer sakene</h2>
+    <ul>
+        {% for ticket in tickets %}
+        {% if ticket.status != 'lukket' %}
+        <li>
+            <strong>{{ ticket.title }}</strong> - {{ ticket.description }} ({{ ticket.status }})
+            {% if ticket.status == 'åpen' %}
+            <form method="POST" action="/manage_ticket" style="display:inline;">
+                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                <button type="submit" name="action" value="ta_sak">Ta sak</button>
+            </form>
+            {% elif ticket.status == 'under behandling' %}
+            <form method="POST" action="/manage_ticket" style="display:inline;">
+                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                <button type="submit" name="action" value="lukk_sak">Lukk sak</button>
+            </form>
+            {% endif %}
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    <a href="/"><button>Back til hovedmenyen</button></a>
+</body>
+
+</html>
