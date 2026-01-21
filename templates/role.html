@@ -10,13 +10,16 @@
 <body>
 
     <p>Du har flere roller. Hva vil du gjøre i dag?</p>
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
 
-    <form method="POST" action="/set_role">
-        {% for r in roles %}
+    <form method="POST" action="/chose_role">
+        {% for role in roles %}
         <ul>
-            <button type="submit" name="role" value="{{ r }}">
-                {% if r == 'bruker' %}Bruker{% endif %}
-                {% if r == 'drift' %}Drift arbeider{% endif %}
+            <button type="submit" name="role" value="{{ role }}">
+                {% if role == 'bruker' %}Bruker{% endif %}
+                {% if role == 'drift' %}Drift arbeider{% endif %}
             </button>
         </ul>
         {% endfor %}

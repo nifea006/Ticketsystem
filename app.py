@@ -37,9 +37,11 @@ def users_table():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 email VARCHAR(100),
                 username VARCHAR(50) NOT NULL UNIQUE,
-                name VARCHAR(100) NOT NULL,
+                first_name VARCHAR(100) NOT NULL,
+                last_name VARCHAR(100) NOT NULL,
                 password VARCHAR(255) NOT NULL,
-                role VARCHAR(50) NOT NULL
+                bruker_role BOOLEAN DEFAULT TRUE,
+                drift_role BOOLEAN DEFAULT FALSE
             )
         """)
         connection.commit()
@@ -61,7 +63,7 @@ def tickets_table():
                 title VARCHAR(255) NOT NULL,
                 description TEXT NOT NULL,
                 status VARCHAR(50) NOT NULL DEFAULT 'åpen',
-                process_id INT,
+                process_id INT
             )
         """)
         connection.commit()
@@ -82,16 +84,24 @@ def login():
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
-        user = cursor.fetchone()
+        db_user = cursor.fetchone()
         cursor.close()
         connection.close()
 
-        if user:
-            session['username'] = user['username']
-            session['active_role'] = user['role']
+        roles = []
+        if db_user:
+            if db_user['bruker_role']:
+                roles.append('bruker')
+            if db_user['drift_role']:
+                roles.append('drift')
+        
+        session['username'] = username
+        session['roles'] = roles
+
+        if roles == ['bruker']:
+            session['active_role'] = 'bruker'
             return redirect(url_for('main_menu'))
-        else:
-            return render_template('login.html', error="Ugyldig brukernavn eller passord")
+        return redirect(url_for('chose_role'))
         
     return render_template('login.html')
 
@@ -100,23 +110,24 @@ def register():
     if request.method == 'POST':
         email = request.form['email']
         username = request.form['username']
-        name = request.form['name']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
         password = request.form['password']
 
         
         connection = get_db_connection()
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM users WHERE email = %s AND username = %s", (email, username))
-        existing_user = cursor.fetchone()
+        existing_db_user = cursor.fetchone()
         cursor.close()
         connection.close()
 
-        if existing_user:
+        if existing_db_user:
             return render_template('login.html', error="E-post eller brukernavn er allerede registrert")
 
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO users (email, username, name, password, role) VALUES (%s, %s, %s, %s, %s)", (email, username, name, password, "bruker"))
+        cursor.execute("INSERT INTO users (email, username, first_name, last_name, password, bruker_role, drift_role) VALUES (%s, %s, %s, %s, %s, TRUE, FALSE)", (email, username, first_name, last_name, password))
         connection.commit()
         cursor.close()
         connection.close()
@@ -129,24 +140,26 @@ def register():
 def chose_role():
     if 'username' not in session:
         return redirect(url_for('login'))
-        
-    if request.method == 'POST':
-        role = request.form['role']
-        session['active_role'] = role
-        return redirect(url_for('main_menu'))
-
-    return render_template('chose_role.html')
+    
+    roles = session.get("roles", [])
+    if request.method == "POST":
+        selected_role = request.form.get("role")
+        if selected_role in roles:
+            session["active_role"] = selected_role
+            return redirect(url_for("main_menu"))
+        else:
+            return render_template("role.html", roles=roles, error="Ugyldig rolle valgt.")
+    
+    return render_template("role.html", roles=roles)
 
 @app.route('/')
 def main_menu():
     if 'username' not in session:
         return redirect(url_for('login'))
-
-    role = session.get("active_role")
-    if not role:
-        return redirect(url_for("login"))
     
-    return render_template('main_menu.html')
+    role = session.get('active_role')
+
+    return render_template('main_menu.html', role=role)
 
 if __name__ == '__main__':
     app.run(debug=True)
