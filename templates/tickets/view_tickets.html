@@ -1,40 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Se sakene</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
-    {% if session.active_role == 'bruker' %}
-    <h2>Sakene dine</h2>
-    <ul>
-        {% for ticket in tickets %}
-        <li>
-            <strong>{{ ticket.title }}</strong> - {{ ticket.description }} (Status: {{ ticket.status }})
-        </li>
-        {% endfor %}
-    </ul>
+    <div class="container">
+        <!-- Bruker -->
+        {% if session.active_role == 'bruker' %}
+        <h2>Sakene dine</h2>
+        <div class="back-button">
+            <a href="/"><button>← Tilbake til hovedmenyen</button></a>
+        </div>
 
-    {% elif session.active_role == 'drift' %}
-    <h2>Alle sakene</h2>
-    <ul>
+        {% if tickets %}
         {% for ticket in tickets %}
-        <li>
-            <strong>{{ ticket.title }}</strong> - {{ ticket.description }} (Status: {{ ticket.status }})
-            {% if ticket.status == 'lukket' %}
-            <form action="/manage_ticket" method="POST" style="display: inline;">
-                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                <button type="submit" name="action" value="fjern_sak">Fjern sak</button>
-            </form>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    <a href="/"><button>Back til hovedmenyen</button></a>
+        <div class="ticket-card">
+            <!-- Processing tickets -->
+            {% if ticket.status == 'under behandling' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <div class="ticket-sender">
+                Opprettet: {{ ticket.creation_time | format_date }}
+            </div>
+            <span class="ticket-status status-processing">
+                👁️‍🗨️ Under behandling av <strong>{{ ticket.process_id }}</strong> {{ ticket.process_time | format_date }}
+            </span>
+
+            <!-- Open tickets -->
+            {% elif ticket.status == 'åpen' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <div class="ticket-sender">
+                Opprettet: {{ ticket.creation_time | format_date }}
+            </div>
+            <span class="ticket-status status-open">
+                🔓 Åpen
+            </span>
+
+            <!-- Closed tickets -->
+            {% elif ticket.status == 'lukket' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <div class="ticket-sender">
+                Opprettet: {{ ticket.creation_time | format_date }}
+            </div>
+            <span class="ticket-status status-closed">
+                🔒 Lukket av <strong>{{ ticket.process_id }}</strong> {{ ticket.close_time | format_date }}
+            </span>
+
+            {% endif %} <!-- if ticket.status == 'under behandling', elif 'åpen', elif 'lukket' -->
+        </div>
+        {% endfor %} <!-- for ticket in tickets -->
+        {% else %} <!-- if tickets -->
+        <p class="no-case">Ingen saker funnet.</p>
+        {% endif %}
+
+
+
+        <!-- Drift -->
+        {% elif session.active_role == 'drift' %}
+        <h2>Alle sakene</h2>
+        <div class="back-button">
+            <a href="/"><button>← Tilbake til hovedmenyen</button></a>
+        </div>
+
+        {% if tickets %}
+        {% for ticket in tickets %}
+        <div class="ticket-card">
+            <!-- Processing tickets -->
+            {% if ticket.status == 'under behandling' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-sender">
+                Fra: <strong>{{ ticket.username }}</strong> {{ ticket.creation_time | format_date }}
+            </div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <span class="ticket-status status-processing">
+                👁️‍🗨️ Under behandling av <strong>{{ ticket.process_id }}</strong> {{ ticket.process_time | format_date }}
+            </span>
+
+            <!-- Open tickets -->
+            {% elif ticket.status == 'åpen' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-sender">
+                Fra: <strong>{{ ticket.username }}</strong> {{ ticket.creation_time | format_date }}
+            </div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <span class="ticket-status status-open">
+                🔓 Åpen
+            </span>
+
+            <!-- Closed tickets -->
+            {% elif ticket.status == 'lukket' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-sender">
+                Fra: <strong>{{ ticket.username }}</strong> {{ ticket.creation_time | format_date }}
+            </div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <span class="ticket-status status-closed">
+                🔒 Lukket av <strong>{{ ticket.process_id }}</strong> {{ ticket.close_time | format_date }}
+            </span>
+            <div class="ticket-actions">
+                <form action="/view_tickets" method="POST">
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                    <button type="submit" name="action" value="fjern_sak">🗑️</button>
+                </form>
+            </div>
+            {% endif %} <!-- if ticket.status == 'under behandling', elif 'åpen', elif 'lukket' -->
+        </div>
+        {% endfor %} <!-- for ticket in tickets -->
+
+        {% else %} <!-- if tickets -->
+        <p class="no-case">Ingen saker funnet.</p>
+        {% endif %}
+
+        {% endif %} <!-- if session.active_role == 'bruker', elif 'drift' -->
+
+        <div class="back-button">
+            <a href="/"><button>← Tilbake til hovedmenyen</button></a>
+        </div>
+    </div>
 </body>
 
 </html>

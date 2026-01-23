@@ -1,40 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Main Menu</title>
+    <title>Hovedmeny</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
+    <div class="container">
+        <h1>Hovedmeny</h1>
 
-    <p>Hva vil du gjøre?</p>
+        {% if role == 'bruker' %}
+        <h2>Bruker Meny</h2>
+        <ul>
+            <a href="/create_ticket">
+                <li>Opprett ny sak</li>
+            </a>
+            <a href="/view_tickets">
+                <li>Se mine saker</li>
+            </a>
+            {% if 'drift' in session.roles %}
+            <a href="/chose_role">
+                <li>Endre rolle</li>
+            </a>
+            {% endif %}
+            <a href="/logout">
+                <li>Logg ut</li>
+            </a>
+        </ul>
 
-    {% if message %}
-    <p style="color: red;">{{ message }}</p>
-    {% endif %}
-    
-
-    {% if role == 'bruker' %}
-    <ul>
-        <li><a href="/create_ticket">Opprett ny sak</a></li>
-        <li><a href="/view_tickets">Se mine saker</a></li>
-        {% if 'drift' in session.roles %}
-        <li><a href="/chose_role">Endre rolle</a></li>
+        {% elif role == 'drift' %}
+        <h2>Drift Arbeider Meny</h2>
+        <ul>
+            <a href="/manage_tickets">
+                <li>Administrer saker</li>
+            </a>
+            <a href="/view_tickets">
+                <li>Se alle saker</li>
+            </a>
+            <a href="/chose_role">
+                <li>Endre rolle</li>
+            </a>
+            <a href="/logout">
+                <li>Logg ut</li>
+            </a>
+        </ul>
         {% endif %}
-        <li><a href="/logout">Logg ut</a></li>
-    </ul>
-
-    {% elif role == 'drift' %}
-    <ul>
-        <li><a href="/manage_tickets">Ta et sak</a></li>
-        <li><a href="/view_tickets">Se alle saker</a></li>
-        <li><a href="/chose_role">Endre rolle</a></li>
-        <li><a href="/logout">Logg ut</a></li>
-    </ul>
-    {% endif %}
-
+    </div>
 </body>
 
 </html>

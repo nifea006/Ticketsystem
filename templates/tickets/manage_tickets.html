@@ -1,36 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administrer sakene</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
+    <div class="container">
+        <h2>Administrer sakene</h2>
+        <div class="back-button">
+            <a href="/"><button>← Tilbake til hovedmenyen</button></a>
+        </div>
 
-    <h2>Administrer sakene</h2>
-    <ul>
+        {% if tickets %}
+
         {% for ticket in tickets %}
         {% if ticket.status != 'lukket' %}
-        <li>
-            <strong>{{ ticket.title }}</strong> - {{ ticket.description }} ({{ ticket.status }})
-            {% if ticket.status == 'åpen' %}
-            <form method="POST" action="/manage_ticket" style="display:inline;">
-                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                <button type="submit" name="action" value="ta_sak">Ta sak</button>
-            </form>
-            {% elif ticket.status == 'under behandling' %}
-            <form method="POST" action="/manage_ticket" style="display:inline;">
-                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                <button type="submit" name="action" value="lukk_sak">Lukk sak</button>
-            </form>
+
+        <div class="ticket-card">
+            <!-- Processing tickets -->
+            {% if ticket.status == 'under behandling' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-sender">
+                Fra: <strong>{{ ticket.username }}</strong> {{ ticket.creation_time | format_date }}
+            </div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <!-- Ticket actions -->
+            <span class="ticket-status status-processing">
+                👁️‍🗨️ Under behandling av <strong>{{ ticket.process_id }}</strong> {{ ticket.process_time | format_date }}
+            </span>
+
+            <!-- Open tickets -->
+            {% elif ticket.status == 'åpen' %}
+            <div class="ticket-title">{{ ticket.title }}</div>
+            <div class="ticket-sender">
+                Fra: <strong>{{ ticket.username }}</strong> {{ ticket.creation_time | format_date }}
+            </div>
+            <div class="ticket-description">{{ ticket.description }}</div>
+            <span class="ticket-status status-open">
+                🔓 Åpen
+            </span>
             {% endif %}
-        </li>
+            <!-- Ticket actions -->
+            <div class="ticket-actions">
+                {% if ticket.status == 'åpen' %}
+                <form method="POST" action="/manage_tickets">
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                    <button type="submit" name="action" value="ta_sak">✅ Ta sak</button>
+                </form>
+                {% elif ticket.status == 'under behandling' %}
+                <form method="POST" action="/manage_tickets">
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                    <button type="submit" name="action" value="lukk_sak">🔒 Lukk sak</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
         {% endif %}
         {% endfor %}
-    </ul>
-    <a href="/"><button>Back til hovedmenyen</button></a>
+
+        {% else %}
+        <p class="no-case">Ingen åpne saker.</p>
+        {% endif %}
+
+        <div class="back-button">
+            <a href="/"><button>← Tilbake til hovedmenyen</button></a>
+        </div>
+    </div>
 </body>
 
 </html>

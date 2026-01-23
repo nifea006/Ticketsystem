@@ -1,55 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Logg inn</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
+    <div class="container">
+        <h1>TechSupport AS</h1>
 
-    <h1>Velkommen til TechSupport AS</h1>
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
 
-    {% if error %}
-    <p style="color: red;">{{ error }}</p>
-    {% endif %}
+        {% if request.path == '/login' %}
+        <h2>Logg inn</h2>
+        <form method="POST" action="/login">
+            <label for="username">Brukernavn:</label>
+            <input type="text" id="username" name="username" required>
 
-    {% if request.path == '/login' %}
-    <h2>Login</h2>
-    <form method="POST" action="/login">
-        <label for="username">Brukernavn:</label><br>
-        <input type="text" id="username" name="username" required><br><br>
+            <label for="password">Passord:</label>
+            <input type="password" id="password" name="password" required>
 
-        <label for="password">Passord:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
+            <button type="submit">Logg inn</button>
+        </form>
+        <p>Har du ikke konto? <a href="/register">Registrer deg</a></p>
 
-        <button type="submit">Logg inn</button>
-        <p>Har du ikke konto?<a href="/register"> Registrer deg</a></p>
-    </form>
+        {% elif request.path == '/register' %}
+        <h2>Registrer</h2>
+        <form method="POST" action="/register">
+            <label for="email">E-post:</label>
+            <input type="email" id="email" name="email" required>
 
-    {% elif request.path == '/register' %}
-    <h2>Registrer</h2>
-    <form method="POST" action="/register">
-        <label for="email">E-post:</label><br>
-        <input type="email" id="email" name="email" required><br><br>
+            <label for="username">Brukernavn:</label>
+            <input type="text" id="username" name="username" required>
 
-        <label for="username">Brukernavn:</label><br>
-        <input type="text" id="username" name="username" required><br><br>
+            <label for="first_name">Fornavn:</label>
+            <input type="text" id="first_name" name="first_name" required>
 
-        <label for="first_name">Fornavn:</label><br>
-        <input type="text" id="first_name" name="first_name" required><br><br>
+            <label for="last_name">Etternavn:</label>
+            <input type="text" id="last_name" name="last_name" required>
 
-        <label for="last_name">Etternavn:</label><br>
-        <input type="text" id="last_name" name="last_name" required><br><br>
+            <label for="password">Passord:</label>
+            <input type="password" id="password" name="password" required>
 
-        <label for="password">Passord:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
-
-        <button type="submit">Registrer</button>
-        <p>Har du allerede en konto?<a href="/login"> Logg inn</a></p>
-    </form>
-    {% endif %}
+            <button type="submit">Registrer</button>
+        </form>
+        <p>Har du allerede konto? <a href="/login">Logg inn</a></p>
+        {% endif %}
+    </div>
 </body>
 
 </html>

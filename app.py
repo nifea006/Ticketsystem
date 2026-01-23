@@ -1,11 +1,24 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import mysql.connector
 import os
+import json
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
 app = Flask(__name__)
+
+@app.template_filter('format_date')
+def format_date(value):
+    if not value:
+        return ''
+    try:
+        if isinstance(value, str):
+            value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        return value.strftime("%d-%m-%Y %H:%M")
+    except Exception:
+        return value
 
 # Read environment variables
 DB_HOST = os.getenv("DB_HOST")
@@ -63,7 +76,10 @@ def tickets_table():
                 title VARCHAR(255) NOT NULL,
                 description TEXT NOT NULL,
                 status VARCHAR(50) NOT NULL DEFAULT 'åpen',
-                process_id INT
+                process_id VARCHAR(50) DEFAULT NULL,
+                creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                process_time TIMESTAMP NULL DEFAULT NULL,
+                close_time TIMESTAMP NULL DEFAULT NULL
             )
         """)
         connection.commit()
@@ -88,6 +104,7 @@ def login():
         cursor.close()
         connection.close()
 
+        # Set roles
         roles = []
         if db_user:
             if db_user['bruker_role']:
@@ -95,12 +112,14 @@ def login():
             if db_user['drift_role']:
                 roles.append('drift')
         
+        # Set session variables
         session['username'] = username
         session['roles'] = roles
 
         if roles == ['bruker']:
             session['active_role'] = 'bruker'
             return redirect(url_for('main_menu'))
+        
         return redirect(url_for('chose_role'))
         
     return render_template('login.html')
@@ -114,7 +133,7 @@ def register():
         last_name = request.form['last_name']
         password = request.form['password']
 
-        
+        # Check if user already exists
         connection = get_db_connection()
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM users WHERE email = %s AND username = %s", (email, username))
@@ -125,9 +144,11 @@ def register():
         if existing_db_user:
             return render_template('login.html', error="E-post eller brukernavn er allerede registrert")
 
+        # Insert new user
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO users (email, username, first_name, last_name, password, bruker_role, drift_role) VALUES (%s, %s, %s, %s, %s, TRUE, FALSE)", (email, username, first_name, last_name, password))
+        cursor.execute("INSERT INTO users (email, username, first_name, last_name, password, bruker_role, drift_role)" \
+        "VALUES (%s, %s, %s, %s, %s, TRUE, FALSE)", (email, username, first_name, last_name, password))
         connection.commit()
         cursor.close()
         connection.close()
@@ -141,6 +162,7 @@ def chose_role():
     if 'username' not in session:
         return redirect(url_for('login'))
     
+    # Get available roles from session
     roles = session.get("roles", [])
     if request.method == "POST":
         selected_role = request.form.get("role")
@@ -171,6 +193,7 @@ def create_ticket():
     if 'username' not in session:
         return redirect(url_for('login'))
     username = session['username']
+    careation_time = datetime.now().strftime("%d-%m-%Y %H:%M")
 
     if request.method == 'POST':
         title = request.form['title']
@@ -178,19 +201,38 @@ def create_ticket():
 
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO tickets (username, title, description) VALUES (%s, %s, %s)", (username, title, description))
+        # Insert new ticket
+        cursor.execute("INSERT INTO tickets (username, title, description, creation_time)" \
+        "VALUES (%s, %s, %s, %s)", (username, title, description, careation_time))
         connection.commit()
         cursor.close()
         connection.close()
 
     return render_template('tickets/create_ticket.html')
 
-@app.route('/view_tickets')
+@app.route('/view_tickets', methods=['GET', 'POST'])
 def view_tickets():
     if 'username' not in session:
         return redirect(url_for('login'))
+    
     username = session['username']
-
+    
+    if request.method == 'POST':
+        ticket_id = request.form.get('ticket_id')
+        action = request.form.get('action')
+        
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        # Delete ticket
+        if action == 'fjern_sak':
+            cursor.execute("DELETE FROM tickets WHERE id = %s", (ticket_id,))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        
+        return redirect(url_for('view_tickets'))
+    
+    # Get individual tickets for current user
     if session.get('active_role') == 'bruker':
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -199,6 +241,7 @@ def view_tickets():
         cursor.close()
         connection.close()
 
+    # Get all tickets for drift role
     elif session.get('active_role') == 'drift':
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -209,11 +252,35 @@ def view_tickets():
 
     return render_template('tickets/view_tickets.html', tickets=tickets)
 
-@app.route('/manage_tickets')
+
+@app.route('/manage_tickets', methods=['GET', 'POST'])
 def manage_tickets():
     if 'username' not in session:
         return redirect(url_for('login'))
-
+    username = session['username']
+    
+    if request.method == 'POST':
+        ticket_id = request.form.get('ticket_id')
+        action = request.form.get('action')
+        process_time = datetime.now().strftime("%d-%m-%Y %H:%M")
+        close_time = datetime.now().strftime("%d-%m-%Y %H:%M")
+        
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        # Update ticket status based on action
+        if action == 'ta_sak':
+            cursor.execute("UPDATE tickets SET status = 'under behandling', process_id = %s, process_time = %s" \
+            "WHERE id = %s", (username, process_time, ticket_id))
+        elif action == 'lukk_sak':
+            cursor.execute("UPDATE tickets SET status = 'lukket', process_id = %s, close_time = %s" \
+            "WHERE id = %s", (username, close_time, ticket_id))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        
+        return redirect(url_for('manage_tickets'))
+    
+    # Get the list of tickets
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     cursor.execute("SELECT * FROM tickets")
@@ -222,28 +289,6 @@ def manage_tickets():
     connection.close()
 
     return render_template('tickets/manage_tickets.html', tickets=tickets)
-
-@app.route('/manage_ticket', methods=['POST'])
-def manage_ticket():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-
-    ticket_id = request.form['ticket_id']
-    action = request.form['action']
-
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    if action == 'ta_sak':
-        cursor.execute("UPDATE tickets SET status = 'under behandling' WHERE id = %s", (ticket_id,))
-    elif action == 'lukk_sak':
-        cursor.execute("UPDATE tickets SET status = 'lukket' WHERE id = %s", (ticket_id,))
-
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-    return redirect(url_for('manage_tickets'))
 
 if __name__ == '__main__':
     app.run(debug=True)
