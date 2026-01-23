@@ -1,5 +1,14 @@
 # Ticketsystem
 
+## Project Description
+
+This project is a simple ticket system developed as a school project. The assignment was to build a lightweight helpdesk solution for a fictional company called TechSupport AS, which was struggling to keep track of daily support requests.
+
+The solution is built with Flask and uses a MariaDB database with two tables: users and tickets. Employees can register, log in, and use the system based on their role:
+
+- Regular users can create tickets and view the status of their own cases.
+- Tech support workers can see all tickets, assign themselves cases, and update the status (open / in progress / closed).
+
 ## How to Run the Project
 
 ### 1. Install Dependencies
