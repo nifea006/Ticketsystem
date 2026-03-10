@@ -11,9 +11,14 @@ The solution is built with Flask and uses a MariaDB database with two tables: us
 
 ## How to Run the Project
 
-### 1. Install Dependencies
+### 1. Clone the project
 
-After opening the project folder in your code editor, install the required Python dependencies.
+    git clone <url-to-the-forked-repo>
+    cd Ticketsystem
+
+### 2. Install Dependencies
+
+After opening the project folder in your code editor, install the required Python dependencies using the terminal.
 
 It is recommended (but optional) to use a virtual environment so you don’t clutter your global Python installation.
 
@@ -33,7 +38,7 @@ If you don’t have the `requirements.txt`, install manually:
 
 ---
 
-## Database Setup (MariaDB / MySQL)
+### 3. Database Setup (MariaDB / MySQL)
 
 To run the webpage, you must use a MySQL-based database (such as MariaDB).
 
@@ -47,16 +52,18 @@ Find this inside [`app.py`](/app.py):
         host=DB_HOST or "localhost",
         user=DB_USER or "your_user_name",
         password=DB_PASSWORD or "your_password",
-        database=DB_KANTINE or "your_database_name"
+        database=DB_TechSupportAS or "your_database_name"
     )
 
-Make sure these match your local database configuration.
+Then insert the test data [`test_data.sql`](/test_data.sql) into your database:
+
+    < "Path/to/the/test_data.sql"
 
 ---
 
 ## Running the Project
 
-After installing dependencies and configuring the database, you can start the server with:
+After installing dependencies and configuring the database, you can start the server in the terminal with:
 
     python app.py
 
